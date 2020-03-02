@@ -18,10 +18,10 @@ import java.util.Map;
 public class Download {
 
     private StringBuffer m_url;
-    public Download(String m_url){
+
+    public Download(String m_url) {
         this.m_url = new StringBuffer(m_url);
     }
-    
 
     public static boolean isValid(StringBuffer url) {
         try {
@@ -46,7 +46,6 @@ public class Download {
         }
         return u;
     }*/
-
     public int start() throws IOException {
 
         URL u = null;
@@ -63,38 +62,41 @@ public class Download {
         connection.connect();
 
         // This should get you the size of the file to download (in bytes)
-        int contentLength = connection.getContentLength();
+        long contentLength = connection.getContentLength();
+        double len = (double)contentLength/(double)(1024*1024);
 
         System.out.println(contentLength);
-         System.out.println(u.getFile());
+        System.out.println(len + "MB");
+        System.out.println(u.getFile());
         BufferedInputStream is;
         try {
             is = new BufferedInputStream(((HttpURLConnection) connection).getInputStream());
         } catch (Exception e) {
             is = new BufferedInputStream(((HttpURLConnection) connection).getErrorStream());
         }
-        Map<String, List<String>> entries = connection.getHeaderFields();
+        /*Map<String, List<String>> entries = connection.getHeaderFields();
         entries.forEach((k, v) -> {
             System.out.println(k + ": " + v.toString());
         });
+         */
         String fileType = connection.guessContentTypeFromStream(is);
         String type = connection.getContentType();
-        if (fileType == null || fileType.length()>type.length()) {
+        if (fileType == null || fileType.length() > type.length()) {
             fileType = connection.getContentType();
         }
         fileType = fileType.substring(fileType.lastIndexOf('/') + 1);
+
         String _file = u.getFile();
 
         System.out.println(_file + " " + fileType);
         _file = _file.substring(_file.lastIndexOf('/') + 1) + ((_file.contains(".")) ? "" : ("." + fileType));
 
         File file = new File(_file);
-          if(!file.getAbsoluteFile().getParentFile().exists())
-                {
-                    System.out.println(file.getAbsoluteFile().getParentFile().mkdirs());
-                    
-                }
-                System.out.println(file.getName());
+        if (!file.getAbsoluteFile().getParentFile().exists()) {
+            System.out.println(file.getAbsoluteFile().getParentFile().mkdirs());
+
+        }
+        System.out.println(file.getName());
 
         FileOutputStream os = new FileOutputStream((_file).trim());
 
@@ -102,6 +104,9 @@ public class Download {
         int count = 0;
         while ((count = is.read(buffer, 0, 1024)) != -1) {
             os.write(buffer, 0, count);
+            Progress.prg.setString(String.format("%.2f", ((double)os.getChannel().size()/(double)contentLength)*100) + "%");
+            Progress.prg.setValue((int)(((double)os.getChannel().size()/(double)contentLength)*100));
+            System.out.println(((double)os.getChannel().size()/(double)contentLength)*100 + "%");
         }
 
         os.close();

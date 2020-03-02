@@ -11,10 +11,18 @@ import java.io.IOException;
  * @author Jana Anik
  */
 public class Download_Tester {
+    
+    public static Progress progress;
 
     public static void main(String[] args) throws IOException {
-        Download down = new Download("");
-        down.start();
+        Download down = new Download("https://www.researchgate.net/profile/Dr_DK_Kaushik/publication/264005162_An_Introduction_to_Microprocessor_8085/links/53fb5d750cf2364ccc03d728/An-Introduction-to-Microprocessor-8085.pdf");
+        progress = new Progress();
+        progress.setVisible(true);
+        //progress.prg.setValue(0);
+        if(down.start()==1){
+            progress.setVisible(false);
+            System.exit(0);
+        }
 
     }
 
