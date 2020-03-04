@@ -19,15 +19,11 @@ public class Progress extends javax.swing.JFrame {
      * Creates new form Progress
      */
 
-    private Download download;
+    
     public Progress() {
         initComponents();
     }
-    public Progress(Download download){
-        initComponents();
-        this.download = download;
-        this.download.progressBar = this;
-    }
+    
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -96,20 +92,11 @@ public class Progress extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-        //try {
-            download.setStatus(Download.PAUSE);
-        //} catch (InterruptedException ex) {
-        //    Logger.getLogger(Progress.class.getName()).log(Level.SEVERE, null, ex);
-        //}
+        
     }//GEN-LAST:event_jButton1ActionPerformed
 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
-        try {
-            download.resumeDownload();
-        } catch (IOException ex) {
-            ex.printStackTrace();
-            System.out.println("Couldn't resume download..." + ex.getMessage() + ex.getLocalizedMessage());
-        }
+        
     }//GEN-LAST:event_jButton2ActionPerformed
 
     /**

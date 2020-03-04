@@ -1,55 +1,37 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 
-/**
- *
- * @author Jana Anik
- */
 import java.io.*;
 import java.net.*;
 import java.net.URL;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class Download implements Runnable {
 
     //public StringBuffer url;
     public StringBuffer urlString;
     private URL url;
-    public long contentLength;
-    public long downloaded;
+    public int contentLength;
+    public int downloaded;
     public boolean acceptRanges;
     public String progress;
 
     private int status;
 
-    public int getStatus() {
-        return status;
-    }
-
-    public void setStatus(int status) {
-        this.status = status;
-    }
     public static final int PAUSE = 1;
     public static final int DOWNLOADING = 2;
     public static final int COMPLETED = 3;
     public static final int ERROR = 4;
 
-    
     public void run() {
         try {
             this.status = Download.DOWNLOADING;
             start();
+            System.exit(0);
         } catch (IOException ex) {
             //Logger.getLogger(Download.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
-    public Progress progressBar;
-    public Download(String urlString) {
+    //public Progress progressBar;
+    public Download(String urlString) throws IOException {
         this.urlString = new StringBuffer(urlString);
         try {
             if (isValid(urlString.toString())) {
@@ -57,6 +39,7 @@ public class Download implements Runnable {
                 this.status = this.PAUSE;
                 this.progress = "0%";
             }
+            acceptRanges = isPausable(this.url.openConnection());
         } catch (URISyntaxException ex) {
             url = null;
         } catch (MalformedURLException ex) {
@@ -70,32 +53,43 @@ public class Download implements Runnable {
         return true;
     }
 
+    public int getStatus() {
+        return status;
+    }
+
+    public void setStatus(int status) {
+        this.status = status;
+    }
+
+    private boolean isPausable(URLConnection connection) {
+
+        //@author Ayush Tripathi
+        try {
+            return (connection.getHeaderField("Accept-Ranges") != null);
+        } catch (Exception ex) {
+            return false;
+        }
+
+    }
+
     public int start() throws IOException {
 
-        //URL u = null;
         URLConnection connection = url.openConnection();
         connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/28.0.1500.29 Safari/537.36");
-        connection.setRequestProperty("Range", "bytes" + downloaded + "-");
+        connection.setRequestProperty("Range", "bytes=" + downloaded + "-");
         connection.connect();
 
-        // This should get you the size of the file to download (in bytes)
         contentLength = connection.getContentLength();
-        double len = (double) contentLength / (double) (1024 * 1024);
 
-        System.out.println(contentLength);
-        System.out.println(len + "MB");
-        System.out.println(url.getFile());
+        RandomAccessFile outFile = null;
+
         BufferedInputStream is;
         try {
             is = new BufferedInputStream(((HttpURLConnection) connection).getInputStream());
         } catch (Exception e) {
             is = new BufferedInputStream(((HttpURLConnection) connection).getErrorStream());
         }
-        /*
-         * Map<String, List<String>> entries = connection.getHeaderFields();
-         * entries.forEach((k, v) -> { System.out.println(k + ": " +
-         * v.toString()); });
-         */
+
         String fileType = connection.guessContentTypeFromStream(is);
         String type = connection.getContentType();
         if (fileType == null || fileType.length() > type.length()) {
@@ -103,45 +97,45 @@ public class Download implements Runnable {
         }
         fileType = fileType.substring(fileType.lastIndexOf('/') + 1);
 
-        String _file = url.getFile();
+        String fileName = url.getFile();
 
-        System.out.println(_file + " " + fileType);
-        _file = _file.substring(_file.lastIndexOf('/') + 1) + ((_file.contains(".")) ? "" : ("." + fileType));
+        fileName = fileName.substring(fileName.lastIndexOf('/') + 1) + ((fileName.contains(".")) ? "" : ("." + fileType));
 
-        File file = new File(_file);
+        //If this doesn't work, just remove it!
+        File file = new File(fileName);
         if (!file.getAbsoluteFile().getParentFile().exists()) {
-            System.out.println(file.getAbsoluteFile().getParentFile().mkdirs());
-
+            file.getAbsoluteFile().getParentFile().mkdirs();
         }
-        System.out.println(file.getName());
 
-        FileOutputStream os = new FileOutputStream((_file).trim());
+        //try {
+        outFile = new RandomAccessFile(file.getName(), "rw");
+        outFile.seek(downloaded);
+        //} catch()
 
-        byte[] buffer = new byte[1024];
+        byte[] buffer;
         int count = 0;
-        while (this.status == Download.DOWNLOADING) {// ((count = is.read(buffer, 0, 1024)) != -1) {
-            if (((count = is.read(buffer, 0, 1024)) != -1)) {
-                os.write(buffer, 0, count);
-                //Progress.prg.setString(String.format("%.2f", ((double)os.getChannel().size()/(double)contentLength)*100) + "%");
-                //Progress.prg.setValue((int)(((double)os.getChannel().size()/(double)contentLength)*100));
-                progress = String.format("%.2f", ((double) os.getChannel().size() / (double) contentLength) * 100) + "%";
-                System.out.println(progress);
-                downloaded = os.getChannel().size();
-                progressBar.prg.setValue((int)(((double)os.getChannel().size()/(double)contentLength)*100));
-            }else{
+        while (this.status == Download.DOWNLOADING) {
+            if (contentLength - downloaded >= 1024) {
+                buffer = new byte[1024];
+            } else {
+                buffer = new byte[contentLength - downloaded];
+            }
+            if (((count = is.read(buffer)) != -1)) {
+                outFile.write(buffer, 0, count);
+                downloaded += count;
+                progress = String.format("%.2f", ((double) outFile.getChannel().size() / (double) contentLength) * 100) + "%";
+            }
+            if(downloaded == contentLength)
+            {
                 this.status = Download.COMPLETED;
             }
         }
-
-        os.close();
+        
+        outFile.close();
         is.close();
-
+        
+        
         return 1;
     }
-    
-    public void resumeDownload() throws IOException{
-        this.status = Download.DOWNLOADING;
-        start();
-    }
 
-}
+    }
