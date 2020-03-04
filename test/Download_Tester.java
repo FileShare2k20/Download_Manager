@@ -15,33 +15,8 @@ import java.util.logging.Logger;
 public class Download_Tester {
 
     public static void main(String[] args) throws IOException {
-        Download down = new Download("https://funksyou.com/fileDownload/Songs/128/27251.mp3");
-        down.start();
-
-        Thread thread = new Thread(new Runnable(){
-            @Override
-            public void run(){
-                Download down = new Download("https://funksyou.com/fileDownload/Songs/128/27251.mp3");
-                try {
-                    down.start();
-                } catch (IOException ex) {
-                    Logger.getLogger(Download_Tester.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            }
-        });
-        Thread thread2 = new Thread(new Runnable(){
-            @Override
-            public void run(){
-                Download down = new Download("https://funksyou.com/fileDownload/Songs/128/27251.mp3");
-                try {
-                    down.start();
-                } catch (IOException ex) {
-                    Logger.getLogger(Download_Tester.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            }
-        });
-        thread.start();
-        thread2.start();
+        DownloadHandler handler = new DownloadHandler("http://www.blackkat.net/tintin/pdf/Tintin%20And%20The%20Picaros.pdf");
+        
     }
 
 }
