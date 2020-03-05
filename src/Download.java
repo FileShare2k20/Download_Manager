@@ -12,6 +12,7 @@ public class Download implements Runnable {
     public int downloaded;
     public boolean acceptRanges;
     public String progress;
+    public Progress progressBar;
 
     private int status;
 
@@ -23,14 +24,21 @@ public class Download implements Runnable {
     public void run() {
         try {
             this.status = Download.DOWNLOADING;
+
+            //progressBar initiation code
+            progressBar.setVisible(true);
+            progressBar.setValue(0);
+            progressBar.setString("0%");
+            //progressBar initiation code ends here
+
             start();
-            System.exit(0);
+            //System.exit(0);
         } catch (IOException ex) {
             //Logger.getLogger(Download.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
-    //public Progress progressBar;
+    //
     public Download(String urlString) throws IOException {
         this.urlString = new StringBuffer(urlString);
         try {
@@ -38,6 +46,7 @@ public class Download implements Runnable {
                 this.downloaded = 0;
                 this.status = this.PAUSE;
                 this.progress = "0%";
+                this.contentLength = -1;
             }
             acceptRanges = isPausable(this.url.openConnection());
         } catch (URISyntaxException ex) {
@@ -76,10 +85,16 @@ public class Download implements Runnable {
 
         URLConnection connection = url.openConnection();
         connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/28.0.1500.29 Safari/537.36");
-        connection.setRequestProperty("Range", "bytes=" + downloaded + "-");
+        if (this.acceptRanges) {
+            connection.setRequestProperty("Range", "bytes=" + downloaded + "-");
+        } else {
+            progressBar.setUnPausable(true);
+        }
         connection.connect();
 
-        contentLength = connection.getContentLength();
+        if (contentLength == -1) {
+            contentLength = connection.getContentLength();
+        }
 
         RandomAccessFile outFile = null;
 
@@ -118,24 +133,28 @@ public class Download implements Runnable {
             if (contentLength - downloaded >= 1024) {
                 buffer = new byte[1024];
             } else {
+                System.out.println(downloaded);
+                System.out.println(contentLength);
                 buffer = new byte[contentLength - downloaded];
             }
             if (((count = is.read(buffer)) != -1)) {
                 outFile.write(buffer, 0, count);
                 downloaded += count;
-                progress = String.format("%.2f", ((double) outFile.getChannel().size() / (double) contentLength) * 100) + "%";
+                double completedPercent = ((double) outFile.getChannel().size() / (double) contentLength) * 100;
+                progress = String.format("%.2f", completedPercent) + "%";
+                progressBar.setValue((int) completedPercent);
+                progressBar.setString(progress);
+                System.out.println(progress);
             }
-            if(downloaded == contentLength)
-            {
+            if (downloaded == contentLength) {
                 this.status = Download.COMPLETED;
             }
         }
-        
+
         outFile.close();
         is.close();
-        
-        
+
         return 1;
     }
 
-    }
+}

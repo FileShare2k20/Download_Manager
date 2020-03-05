@@ -13,10 +13,17 @@ import java.io.IOException;
 public class DownloadHandler {
 
     Download download;
+    Thread downloadThread;
 
     public DownloadHandler(String url) throws IOException {
         download = new Download(url);
-        Thread downloadThread = new Thread(download);
+        downloadThread = new Thread(download);
+        
+        //Added code for progress bar.
+        Progress prg = new Progress(this);
+        download.progressBar = prg;
+        //Progress code ends here
+        
         downloadThread.start();
     }
 
@@ -26,10 +33,15 @@ public class DownloadHandler {
             throw new Exception("Pause not supported.");
         }
         download.setStatus(Download.PAUSE);
+        
+        System.out.println(download.downloaded);
     }
 
     public void resume() {
         download.setStatus(Download.DOWNLOADING);
+        downloadThread = new Thread(download);
+        System.out.println(download.downloaded);
+        downloadThread.start();
     }
     
     

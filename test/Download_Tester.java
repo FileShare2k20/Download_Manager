@@ -15,8 +15,7 @@ import java.util.logging.Logger;
 public class Download_Tester {
 
     public static void main(String[] args) throws IOException {
-        DownloadHandler handler = new DownloadHandler("http://www.blackkat.net/tintin/pdf/Tintin%20And%20The%20Picaros.pdf");
-        
+        DownloadHandler handler = new DownloadHandler("http://www.blackkat.net/tintin/pdf/Tintin%20in%20Thailand.pdf");
     }
 
 }

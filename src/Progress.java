@@ -24,6 +24,14 @@ public class Progress extends javax.swing.JFrame {
         initComponents();
     }
     
+    //Adedd constructor to chain a download
+    private DownloadHandler downloadHandler;
+    public Progress(DownloadHandler downloadHandler) {
+        initComponents();
+        this.downloadHandler = downloadHandler;
+    }
+    //download chained
+    
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -92,11 +100,15 @@ public class Progress extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-        
+        try {
+            this.downloadHandler.pause();
+        } catch (Exception ex) {
+            Logger.getLogger(Progress.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }//GEN-LAST:event_jButton1ActionPerformed
 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
-        
+        this.downloadHandler.resume();
     }//GEN-LAST:event_jButton2ActionPerformed
 
     /**
@@ -137,6 +149,19 @@ public class Progress extends javax.swing.JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButton1;
     private javax.swing.JButton jButton2;
-    public static javax.swing.JProgressBar prg;
+    private javax.swing.JProgressBar prg;
     // End of variables declaration//GEN-END:variables
+
+    //GUI methods follows
+    void setValue(int i) {
+        prg.setValue(i);
+    }
+
+    void setString(String string) {
+        prg.setString(string);
+    }
+
+    void setUnPausable(boolean b) {
+        jButton1.setEnabled(false);
+    }
 }
