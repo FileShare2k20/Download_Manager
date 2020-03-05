@@ -30,6 +30,9 @@ public class DownloadHandler {
 
     public void resume() {
         download.setStatus(Download.DOWNLOADING);
+        downloadThread = new Thread(download);
+        //System.out.println(download.downloaded);
+        downloadThread.start();
     }
     
     

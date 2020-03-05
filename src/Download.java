@@ -24,7 +24,8 @@ public class Download implements Runnable {
         try {
             this.status = Download.DOWNLOADING;
             start();
-            System.exit(0);
+			System.out.println("Download Complete");
+            //System.exit(0);
         } catch (IOException ex) {
             //Logger.getLogger(Download.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -38,6 +39,7 @@ public class Download implements Runnable {
                 this.downloaded = 0;
                 this.status = this.PAUSE;
                 this.progress = "0%";
+				this.contentLength = -1;
             }
             acceptRanges = isPausable(this.url.openConnection());
         } catch (URISyntaxException ex) {
@@ -76,10 +78,14 @@ public class Download implements Runnable {
 
         URLConnection connection = url.openConnection();
         connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/28.0.1500.29 Safari/537.36");
-        connection.setRequestProperty("Range", "bytes=" + downloaded + "-");
+        if (this.acceptRanges) {
+            connection.setRequestProperty("Range", "bytes=" + downloaded + "-");
+        }
         connection.connect();
 
-        contentLength = connection.getContentLength();
+        if (contentLength == -1) {
+            contentLength = connection.getContentLength();
+        }
 
         RandomAccessFile outFile = null;
 
